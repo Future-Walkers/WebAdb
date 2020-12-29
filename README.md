@@ -1,11 +1,3 @@
----
-Author: Sphantix Hang
-date: 2020-12-29 10:20:39
-last_author: Sphantix Hang
-last_edit_time: 2020-12-29 10:38:01
-file_path: /WebAdb/README.md
----
-
 # WebAdb
 
 ## Thanks
