@@ -1,0 +1,28 @@
+import { AdbSyncRequestId, adbSyncWriteRequest } from './request';
+import { AdbSyncDoneResponse, adbSyncReadResponse, AdbSyncResponseId } from './response';
+import { AdbSyncLstatResponse } from './stat';
+export const AdbSyncEntryResponse = AdbSyncLstatResponse
+    .afterParsed()
+    .uint32('nameLength')
+    .string('name', { lengthField: 'nameLength' })
+    .extra({ id: AdbSyncResponseId.Entry });
+const ResponseTypes = {
+    [AdbSyncResponseId.Entry]: AdbSyncEntryResponse,
+    [AdbSyncResponseId.Done]: new AdbSyncDoneResponse(AdbSyncEntryResponse.size),
+};
+export async function* adbSyncOpenDir(stream, path) {
+    await adbSyncWriteRequest(stream, AdbSyncRequestId.List, path);
+    while (true) {
+        const response = await adbSyncReadResponse(stream, ResponseTypes);
+        switch (response.id) {
+            case AdbSyncResponseId.Entry:
+                yield response;
+                break;
+            case AdbSyncResponseId.Done:
+                return;
+            default:
+                throw new Error('Unexpected response id');
+        }
+    }
+}
+//# sourceMappingURL=list.js.map
