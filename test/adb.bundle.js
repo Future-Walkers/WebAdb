@@ -869,12 +869,14 @@ class AutoResetEvent {
 }
 
 // Prepare maps for O(1) searching
+const charToIndex = {};
 const indexToChar = [];
 const paddingChar = '='.charCodeAt(0);
 function addRange(start, end) {
     const charCodeStart = start.charCodeAt(0);
     const charCodeEnd = end.charCodeAt(0);
     for (let charCode = charCodeStart; charCode <= charCodeEnd; charCode += 1) {
+        charToIndex[String.fromCharCode(charCode)] = indexToChar.length;
         indexToChar.push(charCode);
     }
 }
@@ -883,6 +885,7 @@ addRange('a', 'z');
 addRange('0', '9');
 addRange('+', '+');
 addRange('/', '/');
+
 function calculateBase64EncodedLength(inputLength) {
     const remainder = inputLength % 3;
     const paddingLength = remainder !== 0 ? 3 - remainder : 0;
@@ -1019,6 +1022,56 @@ function encodeBase64(input, arg1, arg2, _arg3, _arg4) {
     else {
         return outputLength;
     }
+}
+
+function decodeBase64(input) {
+    let padding;
+    if (input[input.length - 2] === '=') {
+        padding = 2;
+    }
+    else if (input[input.length - 1] === '=') {
+        padding = 1;
+    }
+    else {
+        padding = 0;
+    }
+    const result = new Uint8Array(input.length / 4 * 3 - padding);
+    let sIndex = 0;
+    let dIndex = 0;
+    while (sIndex < input.length - (padding !== 0 ? 4 : 0)) {
+        const a = charToIndex[input[sIndex]];
+        sIndex += 1;
+        const b = charToIndex[input[sIndex]];
+        sIndex += 1;
+        const c = charToIndex[input[sIndex]];
+        sIndex += 1;
+        const d = charToIndex[input[sIndex]];
+        sIndex += 1;
+        result[dIndex] = (a << 2) | ((b & 48) >> 4);
+        dIndex += 1;
+        result[dIndex] = ((b & 0b1111) << 4) | ((c & 60) >> 2);
+        dIndex += 1;
+        result[dIndex] = ((c & 0b11) << 6) | d;
+        dIndex += 1;
+    }
+    if (padding === 1) {
+        const a = charToIndex[input[sIndex]];
+        sIndex += 1;
+        const b = charToIndex[input[sIndex]];
+        sIndex += 1;
+        const c = charToIndex[input[sIndex]];
+        result[dIndex] = (a << 2) | ((b & 48) >> 4);
+        dIndex += 1;
+        result[dIndex] = ((b & 0b1111) << 4) | ((c & 60) >> 2);
+    }
+    else if (padding === 2) {
+        const a = charToIndex[input[sIndex]];
+        sIndex += 1;
+        const b = charToIndex[input[sIndex]];
+        result[dIndex] = (a << 2) | ((b & 48) >> 4);
+    }
+
+    return result.buffer;
 }
 
 const EventQueueDefaultOptions = {

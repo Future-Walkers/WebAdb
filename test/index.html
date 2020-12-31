@@ -1,9 +1,9 @@
 <!--
  * @Author: Sphantix Hang
  * @Date: 2020-12-26 14:44:30
- * @last_author: Rodney Cheung
- * @last_edit_time: 2020-12-28 18:03:04
- * @FilePath: /webadb/test/index.html
+ * @last_author: Sphantix Hang
+ * @last_edit_time: 2020-12-31 11:09:27
+ * @file_path: /WebAdb/test/index.html
 -->
 <!DOCTYPE html>
 <html>
@@ -14,9 +14,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="WebUSB based Android Debug Bridge (adb) host" />
     <meta name="keywords" content="adb, webusb, android adb, adb host, adb webapp" />
-    <link rel="stylesheet" type="text/css" href="https://www.w3schools.com/w3css/3/w3.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
-    <script src="adb.bundle.js"></script>
+    <!-- <link rel="stylesheet" type="text/css" href="https://www.w3schools.com/w3css/3/w3.css" /> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script> -->
+    <script src="adb.js"></script>
 </head>
 
 <body>
@@ -121,46 +121,52 @@
         </div>
         <span id="bottom"></span>
     </form>
+    <button onclick="connectDevice()">连接设备</button>
     <script>
-        // var AdbEventLogger = /** @class */ (function () {
-        //     function AdbEventLogger() {
-        //         var _this = this;
-        //         this._incomingPacketEvent = new EventEmitter();
-        //         this._outgoingPacketEvent = new EventEmitter();
-        //         this._logger = {
-        //             onIncomingPacket: function (packet) {
-        //                 _this._incomingPacketEvent.fire(packet);
-        //             },
-        //             onOutgoingPacket: function (packet) {
-        //                 _this._outgoingPacketEvent.fire(packet);
-        //             }
-        //         };
-        //     }
-        //     Object.defineProperty(AdbEventLogger.prototype, "logger", {
-        //         get: function () { return this._logger; },
-        //         enumerable: false,
-        //         configurable: true
-        //     });
-        //     Object.defineProperty(AdbEventLogger.prototype, "onIncomingPacket", {
-        //         get: function () { return this._incomingPacketEvent.event; },
-        //         enumerable: false,
-        //         configurable: true
-        //     });
-        //     Object.defineProperty(AdbEventLogger.prototype, "onOutgoingPacket", {
-        //         get: function () { return this._outgoingPacketEvent.event; },
-        //         enumerable: false,
-        //         configurable: true
-        //     });
-        //     return AdbEventLogger;
-        // }());
+        var AdbEventLogger = /** @class */ (function () {
+            function AdbEventLogger() {
+                var _this = this;
+                this._incomingPacketEvent = new EventEmitter();
+                this._outgoingPacketEvent = new EventEmitter();
+                this._logger = {
+                    onIncomingPacket: function (packet) {
+                        _this._incomingPacketEvent.fire(packet);
+                    },
+                    onOutgoingPacket: function (packet) {
+                        _this._outgoingPacketEvent.fire(packet);
+                    }
+                };
+            }
+            Object.defineProperty(AdbEventLogger.prototype, "logger", {
+                get: function () { return this._logger; },
+                enumerable: false,
+                configurable: true
+            });
+            Object.defineProperty(AdbEventLogger.prototype, "onIncomingPacket", {
+                get: function () { return this._incomingPacketEvent.event; },
+                enumerable: false,
+                configurable: true
+            });
+            Object.defineProperty(AdbEventLogger.prototype, "onOutgoingPacket", {
+                get: function () { return this._outgoingPacketEvent.event; },
+                enumerable: false,
+                configurable: true
+            });
+            return AdbEventLogger;
+        }());
 
-        // var logger = new AdbEventLogger();
-
-        const device = new Adb();
-
-        const supported = AdbWebBackend.isSupported();
-
-        console.log(supported)
+        async function connectDevice(){
+            let adbWebBackend =await AdbWebBackend.getDevices();
+            if (adbWebBackend.length!=0){
+                let logger = new AdbEventLogger();
+                let adbDevice = new Adb(adbWebBackend[0],logger);
+                await adbDevice.connect();
+                let res = await adbDevice.getProp('ro.build.version.release');
+                console.log(res);
+            }else{
+                console.log('no device found');
+            }
+        }
 
 
 
